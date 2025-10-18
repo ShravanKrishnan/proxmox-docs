@@ -6,7 +6,7 @@
 # It should be run as root on the Proxmox host.
 #
 # Usage:
-# bash -c "$(curl -fsSL https://.../lxc-post-install.sh)" -- <LXC_ID>
+# bash -c "$(curl -fsSL https://raw.githubusercontent.com/ShravanKrishnan/proxmox-docs/refs/heads/master/LXC_SETUP.sh)" -- <LXC_ID>
 
 # --- General Configuration ---
 readonly COMMON_PACKAGES="sudo curl wget git htop neovim qemu-guest-agent"
@@ -74,10 +74,12 @@ detect_os() {
 update_and_install_packages() {
     if [[ -z "$PKG_MANAGER" ]]; then return; fi
     info "Updating package lists and upgrading system..."
-    lxc_exec "$PKG_MANAGER" "$UPDATE_CMD"
-    lxc_exec "$PKG_MANAGER" "$UPGRADE_CMD"
+    # Use bash -c to ensure commands with multiple arguments are interpreted correctly by the shell inside the container.
+    lxc_exec bash -c "$PKG_MANAGER $UPDATE_CMD"
+    lxc_exec bash -c "$PKG_MANAGER $UPGRADE_CMD"
+
     info "Installing common packages: $COMMON_PACKAGES"
-    lxc_exec "$PKG_MANAGER" "$INSTALL_CMD" $COMMON_PACKAGES
+    lxc_exec bash -c "$PKG_MANAGER $INSTALL_CMD $COMMON_PACKAGES"
     success "Package management tasks complete."
 }
 
@@ -121,7 +123,7 @@ mount_omv_share() {
 
     # 2. Install cifs-utils in the container
     info "Installing CIFS client tools in the container..."
-    lxc_exec "$PKG_MANAGER" "$INSTALL_CMD" cifs-utils
+    lxc_exec bash -c "$PKG_MANAGER $INSTALL_CMD cifs-utils"
     success "CIFS client tools installed."
 
     # 3. Create mount point inside the container
